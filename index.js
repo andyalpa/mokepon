@@ -12,6 +12,9 @@ const jugadores = []
 class Jugador {
   constructor(id) {
     this.id = id
+    this.x = 0
+    this.y = 0
+    this.ataques = []
   }
 
   asignarMokepon(mokepon) {
@@ -55,6 +58,9 @@ app.post("/mokepon/:jugadorId", (req, res) => {
 
   if (jugadorIndex >= 0) {
     jugadores[jugadorIndex].asignarMokepon(mokepon)
+    res.status(200).end()
+  } else {
+    res.status(404).send({ error: "Player not found" })
   }
   
   console.log(jugadores)
@@ -71,13 +77,18 @@ app.post("/mokepon/:jugadorId/posicion", (req, res) => {
 
   if (jugadorIndex >= 0) {
     jugadores[jugadorIndex].actualizarPosicion(x, y)
+    const enemigos = jugadores.filter((jugador) => jugadorId !== jugador.id).map((enemigo) => ({
+      id: enemigo.id,
+      x: enemigo.x,
+      y: enemigo.y,
+      mokepon: enemigo.mokepon
+    }))
+    res.send({
+      enemigos
+    })
+  } else {
+    res.status(404).send({ error: "Player not found" })
   }
-
-  const enemigos = jugadores.filter((jugador) => jugadorId !== jugador.id)
-
-  res.send({
-    enemigos
-  })
 })
 
 app.post("/mokepon/:jugadorId/ataques", (req, res) => {

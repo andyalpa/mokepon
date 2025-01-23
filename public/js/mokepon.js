@@ -154,17 +154,33 @@ function iniciarJuego() {
     unirseAlJuego()
 }
 
+function showSpinner() {
+    document.getElementById('spinner').style.display = 'block';
+}
+
+function hideSpinner() {
+    document.getElementById('spinner').style.display = 'none';
+}
+
 function unirseAlJuego() {
+    showSpinner();
     fetch("http://localhost:8080/unirse")
-        .then(function (res){
+        .then(function (res) {
             if (res.ok) {
                 res.text()
-                    .then(function (respuesta){
-                        console.log(respuesta)
-                        jugadorId = respuesta
-                    })
+                    .then(function (respuesta) {
+                        console.log(respuesta);
+                        jugadorId = respuesta;
+                        hideSpinner();
+                    });
+            } else {
+                throw new Error('Failed to join the game');
             }
         })
+        .catch(function (error) {
+            console.error(error);
+            hideSpinner();
+        });
 }
 
 function seleccionarMascotaJugador() {
@@ -257,17 +273,27 @@ function secuenciaAtaque() {
 }
 
 function enviarAtaques() {
+    showSpinner();
     fetch(`http://localhost:8080/mokepon/${jugadorId}/ataques`, {
-       method: "post",
-       headers: {
-        "Content-Type": "application/json"
-       },
-       body: JSON.stringify({
-        ataques: ataqueJugador
-       })
-    }) 
-
-    intervalo = setInterval(obtenerAtaques, 50)
+        method: "post",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            ataques: ataqueJugador
+        })
+    })
+    .then(function (res) {
+        if (res.ok) {
+            intervalo = setInterval(obtenerAtaques, 50);
+        } else {
+            throw new Error('Failed to send attacks');
+        }
+    })
+    .catch(function (error) {
+        console.error(error);
+        hideSpinner();
+    });
 }
 
 function obtenerAtaques() {
@@ -277,15 +303,20 @@ function obtenerAtaques() {
                 res.json()
                     .then(function ({ ataques }) {
                         if (ataques.length === 5) {
-                        ataqueEnemigo = ataques
-                        combate()
-                    }
-                })
-            }    
+                            ataqueEnemigo = ataques;
+                            combate();
+                            hideSpinner();
+                        }
+                    });
+            } else {
+                throw new Error('Failed to get enemy attacks');
+            }
         })
-
+        .catch(function (error) {
+            console.error(error);
+            hideSpinner();
+        });
 }
-
 
 function seleccionarMascotaEnemigo(enemigo) {
     spanMascotaEnemigo.innerHTML = enemigo.nombre
@@ -437,27 +468,26 @@ function enviarPosicion(x, y) {
         if (res.ok) {
             res.json()
             .then(function ({ enemigos }) {
-                console.log(enemigos)
+                console.log(enemigos);
                 mokeponesEnemigos = enemigos.map(function (enemigo) {
-                    let mokeponEnemigo = null
-                    const mokeponNombre = enemigo.mokepon.nombre || ""
+                    let mokeponEnemigo = null;
+                    const mokeponNombre = enemigo.mokepon.nombre || "";
                     if (mokeponNombre === "Hipodoge") {
-                        mokeponEnemigo = new Mokepon('Hipodoge', './assets/OIG4.hE9m11lCo9V.XH.jpg', 5, './assets/hipodoge.png', enemigo.id)
+                        mokeponEnemigo = new Mokepon('Hipodoge', './assets/OIG4.hE9m11lCo9V.XH.jpg', 5, './assets/hipodoge.png', enemigo.id);
                     } else if (mokeponNombre === "Capipepo") {
-                        mokeponEnemigo = new Mokepon('Capipepo', './assets/OIG2.jpg', 5, './assets/capipepo.png', enemigo.id)
+                        mokeponEnemigo = new Mokepon('Capipepo', './assets/OIG2.jpg', 5, './assets/capipepo.png', enemigo.id);
                     } else if (mokeponNombre === "Ratigueya") {
-                        mokeponEnemigo = new Mokepon('Ratigueya', './assets/OIG2.pedeD4o.xu.jpg', 5, './assets/ratigueya.png', enemigo.id)
+                        mokeponEnemigo = new Mokepon('Ratigueya', './assets/OIG2.pedeD4o.xu.jpg', 5, './assets/ratigueya.png', enemigo.id);
                     }
 
-                    mokeponEnemigo.x = enemigo.x
-                    mokeponEnemigo.y = enemigo.y
+                    mokeponEnemigo.x = enemigo.x;
+                    mokeponEnemigo.y = enemigo.y;
 
-                    return mokeponEnemigo
-                })
-             
-            })
+                    return mokeponEnemigo;
+                });
+            });
         }
-    })
+    });
 }
 
 function moverDerecha() {
